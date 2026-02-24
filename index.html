@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe - Part 4</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 30px 20px;
+        }
+        .game-container {
+            text-align: center;
+            max-width: 450px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #d32f2f;
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .turn-indicator {
+            background-color: #fff;
+            border: 3px solid #333;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        .board {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        .square {
+            width: 100px;
+            height: 100px;
+            background-color: #e8e8e8;
+            border: 3px solid #333;
+            display: inline-block;
+            margin: 5px;
+            font-size: 60px;
+            font-weight: bold;
+            line-height: 100px;
+            text-align: center;
+            cursor: pointer;
+            vertical-align: top;
+            color: #333;
+            transition: background-color 0.3s ease;
+        }
+        .square:hover {
+            background-color: #ffb7ce;
+        }
+        /* Create 3x3 grid layout - force line breaks every 3 squares */
+        .square:nth-child(4),
+        .square:nth-child(7) {
+            clear: left;
+        }
+        .win-message {
+            background-color: #fff;
+            border: 3px solid #4caf50;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 8px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #4caf50;
+            min-height: 20px;
+        }
+        .start-button {
+            background-color: #2196f3;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: background-color 0.3s ease;
+        }
+        .start-button:hover {
+            background-color: #1976d2;
+        }
+        .square.occupied {
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1> Tic Tac Toe - Let's go! </h1>
+        
+        <button class="start-button" onclick="startNewGame()">Start Game</button>
+        
+        <div class="turn-indicator" id="turnDisplay">
+            Click Start Game to Begin!
+        </div>
+
+        <div class="board">
+            <script>
+                const NUM_SQUARES = 9;
+                for (i=0; i<NUM_SQUARES; i++)
+                {
+                    id = "sq"+i;
+                    document.write( "<div class='square' id='" + id + "'></div>" );
+                }
+            </script>
+        </div>
+
+        <div class="win-message" id="messageBox">
+            
+        </div>
+    </div>
+
+    <script>
+        // Global variables to track game state
+        let activePlayer = "X";  // Tracks whose turn it is
+        let canPlay = false;     // Controls if moves are allowed
+        let gameActive = true;   // Track if game is still going
+
+        // Function to handle when a square is clicked
+        function handleSquareClick(event) {
+            // Get which square was clicked
+            let clickedSquare = event.target;
+            let squareNumber = clickedSquare.id.replace("sq", "");
+            
+            // Only allow move if game is active and square is empty
+            if (!canPlay || !gameActive) {
+                return;
+            }
+            
+            if (clickedSquare.innerText !== "") {
+                return;  // Square already filled, do nothing
+            }
+            
+            // Place the current player's symbol
+            clickedSquare.innerText = activePlayer;
+            clickedSquare.classList.add("occupied");
+            
+            // Check for win or stalemate after placing symbol
+            checkGameStatus();
+            
+            // Only switch turns if game is still active
+            if (gameActive) {
+                // Switch to other player
+                if (activePlayer === "X") {
+                    activePlayer = "O";
+                } else {
+                    activePlayer = "X";
+                }
+                
+                // Update turn display
+                document.getElementById("turnDisplay").innerText = activePlayer + "'s Turn";
+            }
+        }
+
+        // Function to check for win or stalemate
+        function checkGameStatus() {
+            // Create moves array using forEach
+            let moves = [];
+            let allSquares = [];
+            
+            // Get all square elements
+            for (let j = 0; j < NUM_SQUARES; j++) {
+                allSquares.push(document.getElementById("sq" + j));
+            }
+            
+            // Use forEach to build moves array
+            allSquares.forEach(function(square) {
+                let content = square.innerText;
+                if (content === "") {
+                    moves.push("-");
+                } else {
+                    moves.push(content);
+                }
+            });
+            
+            // Create winConditions array - 8 possible win patterns
+            let winConditions = [];
+            
+            // 3 rows (horizontal)
+            winConditions.push(moves[0] + moves[1] + moves[2]);  // Row 1
+            winConditions.push(moves[3] + moves[4] + moves[5]);  // Row 2
+            winConditions.push(moves[6] + moves[7] + moves[8]);  // Row 3
+            
+            // 3 columns (vertical)
+            winConditions.push(moves[0] + moves[3] + moves[6]);  // Col 1
+            winConditions.push(moves[1] + moves[4] + moves[7]);  // Col 2
+            winConditions.push(moves[2] + moves[5] + moves[8]);  // Col 3
+            
+            // 2 diagonals
+            winConditions.push(moves[0] + moves[4] + moves[8]);  // Diagonal top-left to bottom-right
+            winConditions.push(moves[2] + moves[4] + moves[6]);  // Diagonal top-right to bottom-left
+            
+            // Check for win condition (XXX or OOO)
+            let winner = null;
+            for (let condition of winConditions) {
+                if (condition === "XXX") {
+                    winner = "X";
+                    break;
+                } else if (condition === "OOO") {
+                    winner = "O";
+                    break;
+                }
+            }
+            
+            // If there's a winner
+            if (winner !== null) {
+                document.getElementById("messageBox").innerText = "🎉 " + winner + " Wins! 🎉";
+                document.getElementById("turnDisplay").innerText = "Game Over!";
+                gameActive = false;
+                canPlay = false;
+                return;
+            }
+            
+            // Check for stalemate - look for hyphens in moves array
+            let hasEmptySquares = false;
+            for (let move of moves) {
+                if (move === "-") {
+                    hasEmptySquares = true;
+                    break;
+                }
+            }
+            
+            // If no empty squares and no winner, it's a stalemate
+            if (!hasEmptySquares) {
+                document.getElementById("messageBox").innerText = "😐 It's a Stalemate! 😐";
+                document.getElementById("turnDisplay").innerText = "Game Over!";
+                gameActive = false;
+                canPlay = false;
+            }
+        }
+
+        // Function to start a new game
+        function startNewGame() {
+            // Randomly pick who starts (0 = X, 1 = O)
+            let randomStart = Math.floor(Math.random() * 2);
+            if (randomStart === 0) {
+                activePlayer = "X";
+            } else {
+                activePlayer = "O";
+            }
+            
+            // Clear all squares
+            for (let idx = 0; idx < NUM_SQUARES; idx++) {
+                let currentSquare = document.getElementById("sq" + idx);
+                currentSquare.innerText = "";
+                currentSquare.classList.remove("occupied");
+            }
+            
+            // Enable gameplay
+            canPlay = true;
+            gameActive = true;
+            
+            // Update display
+            document.getElementById("turnDisplay").innerText = activePlayer + "'s Turn";
+            document.getElementById("messageBox").innerText = "";
+        }
+
+        // Attach click handlers to all squares after page loads
+        window.onload = function() {
+            for (let position = 0; position < NUM_SQUARES; position++) {
+                let squareElement = document.getElementById("sq" + position);
+                squareElement.addEventListener("click", handleSquareClick);
+            }
+        };
+    </script>
+</body>
+</html>
